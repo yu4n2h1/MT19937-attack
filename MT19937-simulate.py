@@ -72,8 +72,9 @@ class VactorMT19937:
         self.mti = 0
 
     def extract_number(self):
-        if self.mti == 0:
-            self.twist()
+        """为了模拟获得整个过程的模拟矩阵，手动更新寄存器状态"""
+        # if self.mti == 0:
+        # self.twist()
 
         y = self.mt[self.mti]
         # print(y >> 11)
@@ -85,7 +86,7 @@ class VactorMT19937:
         return y
 
     def twist(self):
-        for i in range(0, 624):
+        for i in tqdm(range(0, 624)):
             y = (self.mt[i] & Mt(0x80000000)) ^ (
                 self.mt[(i + 1) % 624] & Mt(0x7FFFFFFF)
             )
@@ -101,17 +102,22 @@ class VactorMT19937:
 
 if __name__ == "__main__":
     x = PolynomialRing(Zmod(2), names=["x%05d" % i for i in range(624 * 32)]).gens()
-    x = x[::-1]
     state = [list(x[32 * i : 32 * (i + 1)]) for i in range(624)]
     vr = VactorMT19937(state)
-    p = open("output.txt", "a+")
-    # print(x[-1])
 
+    """获得伪随机数发生的矩阵"""
+    p = open("extract_Matix.txt", "w+")
     for i in tqdm(range(624)):
         tmp = vr.extract_number()
+        # print(len(tmp.mt)) # 如果不打印，生成的数据就会少一部分，不知道为什么
         for j in range(32):
-            que_x = [str(x[1])[1:] for x in list(tmp.mt[j])]
-            # vec = ['0' if x_args not in que_x else '1' for x_args in x]
-
-            p.write(",".join(que_x) + "\n")
+            p.write(",".join([str(x[1])[1:] for x in list(tmp.mt[j])]) + "\n")
     p.close()
+
+    """获得寄存器状态转移的矩阵"""
+    pp = open("twist_Matirx.txt", "w+")
+    vr.twist()
+    for i in tqdm(range(624)):
+        for j in range(32):
+            pp.write(",".join([str(x[1])[1:] for x in list(vr.mt[i].mt[j])]) + "\n")
+    pp.close()
