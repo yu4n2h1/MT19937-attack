@@ -24,6 +24,18 @@ def state_to_vector(state):
     
     return origin_state
 
+def vector_to_state(origin_state):
+    state = [0 for i in range(624)]
+
+    for i in range(624):
+        tmp = origin_state[32*i:32*(i+1)]
+        for j in range(32):
+            if tmp[j] == 1:
+                state[i] |= 1<<j
+                
+    return state
+
+
 if __name__ == "__main__":
     E = read_Matrix("simulate/extract_Matix.txt")
     print(E[0])
